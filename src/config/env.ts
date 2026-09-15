@@ -18,6 +18,9 @@ export const env = {
   supabaseAnonKey: required('SUPABASE_ANON_KEY'),
   supabaseServiceRoleKey: required('SUPABASE_SERVICE_ROLE_KEY'),
   databaseUrl: required('DATABASE_URL'),
+  jwtSecret: required('ADMIN_JWT_SECRET', 'dev-change-me-shahrukh-portfolio'),
+  adminEmail: required('ADMIN_EMAIL'),
+  adminPassword: required('ADMIN_PASSWORD'),
   b2: {
     keyId: required('B2_KEY_ID'),
     applicationKey: required('B2_APPLICATION_KEY'),

@@ -2,12 +2,13 @@ import cors from 'cors'
 import express from 'express'
 import helmet from 'helmet'
 import morgan from 'morgan'
-import { env } from './config/env.js'
+import { env, hasSupabaseConfig } from './config/env.js'
 import { apiRouter } from './routes/index.js'
+import { ensureAdminSeeded } from './services/auth.js'
 
 const app = express()
 
-app.use(helmet())
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }))
 app.use(
   cors({
     origin:
@@ -24,7 +25,7 @@ app.use(express.urlencoded({ extended: true }))
 app.get('/', (_req, res) => {
   res.json({
     name: 'shahrukhbackend',
-    phase: 1,
+    phase: 2,
     docs: 'See README.md',
   })
 })
@@ -48,5 +49,15 @@ app.use(
     })
   },
 )
+
+export async function bootstrap() {
+  if (hasSupabaseConfig()) {
+    try {
+      await ensureAdminSeeded()
+    } catch (err) {
+      console.warn('Admin seed skipped:', err)
+    }
+  }
+}
 
 export default app

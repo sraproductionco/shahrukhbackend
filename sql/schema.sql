@@ -70,3 +70,13 @@ DROP TRIGGER IF EXISTS admins_updated_at ON admins;
 CREATE TRIGGER admins_updated_at
   BEFORE UPDATE ON admins
   FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- API access (Supabase roles)
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon, authenticated, service_role;
+
+ALTER TABLE categories DISABLE ROW LEVEL SECURITY;
+ALTER TABLE projects DISABLE ROW LEVEL SECURITY;
+ALTER TABLE admins DISABLE ROW LEVEL SECURITY;
