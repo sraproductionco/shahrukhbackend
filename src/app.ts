@@ -10,8 +10,11 @@ const app = express()
 app.use(helmet())
 app.use(
   cors({
-    origin: env.corsOrigin.split(',').map((origin) => origin.trim()),
-    credentials: true,
+    origin:
+      env.corsOrigin === '*'
+        ? true
+        : env.corsOrigin.split(',').map((origin) => origin.trim()),
+    credentials: env.corsOrigin !== '*',
   }),
 )
 app.use(morgan(env.nodeEnv === 'production' ? 'combined' : 'dev'))
