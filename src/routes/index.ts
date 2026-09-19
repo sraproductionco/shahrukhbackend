@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { authRouter } from './auth.js'
 import { categoriesRouter } from './categories.js'
 import { healthRouter } from './health.js'
+import { heroRouter } from './hero.js'
 import { mediaRouter } from './media.js'
 import { projectsRouter } from './projects.js'
 import { uploadsRouter } from './uploads.js'
@@ -14,6 +15,7 @@ apiRouter.use('/categories', categoriesRouter)
 apiRouter.use('/projects', projectsRouter)
 apiRouter.use('/uploads', uploadsRouter)
 apiRouter.use('/media', mediaRouter)
+apiRouter.use('/hero', heroRouter)
 
 apiRouter.get('/', (_req, res) => {
   res.json({
@@ -25,6 +27,7 @@ apiRouter.get('/', (_req, res) => {
       projects: 'GET /api/projects',
       uploads: 'POST /api/uploads/presign',
       media: 'GET /api/media?key=',
+      hero: 'GET|PUT /api/hero',
     },
   })
 })
