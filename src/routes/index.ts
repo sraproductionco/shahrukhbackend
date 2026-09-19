@@ -5,6 +5,7 @@ import { healthRouter } from './health.js'
 import { heroRouter } from './hero.js'
 import { mediaRouter } from './media.js'
 import { projectsRouter } from './projects.js'
+import { servicesRouter } from './services.js'
 import { uploadsRouter } from './uploads.js'
 
 export const apiRouter = Router()
@@ -16,6 +17,7 @@ apiRouter.use('/projects', projectsRouter)
 apiRouter.use('/uploads', uploadsRouter)
 apiRouter.use('/media', mediaRouter)
 apiRouter.use('/hero', heroRouter)
+apiRouter.use('/services', servicesRouter)
 
 apiRouter.get('/', (_req, res) => {
   res.json({
@@ -28,6 +30,7 @@ apiRouter.get('/', (_req, res) => {
       uploads: 'POST /api/uploads/presign',
       media: 'GET /api/media?key=',
       hero: 'GET|PUT /api/hero',
+      services: 'GET|POST /api/services',
     },
   })
 })

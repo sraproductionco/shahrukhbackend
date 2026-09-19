@@ -9,7 +9,7 @@ uploadsRouter.post('/presign', requireAuth, async (req, res) => {
   try {
     const filename = String(req.body?.filename ?? '').trim()
     const contentType = String(req.body?.contentType ?? 'application/octet-stream')
-    const kind = String(req.body?.kind ?? 'video') // video | thumbnail
+    const kind = String(req.body?.kind ?? 'video') // video | thumbnail | image
 
     if (!filename) {
       res.status(400).json({ error: 'filename is required' })
@@ -18,7 +18,7 @@ uploadsRouter.post('/presign', requireAuth, async (req, res) => {
 
     const safeName = slugify(filename.replace(/\.[^.]+$/, '')) || 'file'
     const ext = filename.includes('.') ? filename.split('.').pop() : 'bin'
-    const folder = kind === 'thumbnail' ? 'thumbnails' : 'videos'
+    const folder = kind === 'thumbnail' || kind === 'image' ? 'thumbnails' : 'videos'
     const key = `${folder}/${Date.now()}-${safeName}.${ext}`
 
     const result = await createPresignedUploadUrl(key, contentType, 3600)
