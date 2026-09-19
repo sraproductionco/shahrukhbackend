@@ -3,6 +3,7 @@ import { getSupabase } from '../config/supabase.js'
 import { requireAuth } from '../services/auth.js'
 import { slugify } from '../utils/slugify.js'
 import { deleteObject } from '../services/storage.js'
+import { apiBaseFromRequest, withProxiedMedia, withProxiedMediaList } from '../utils/mediaUrl.js'
 
 export const projectsRouter = Router()
 
@@ -38,14 +39,15 @@ projectsRouter.get('/', async (req, res) => {
       )
     }
 
-    res.json({ projects })
+    const apiBase = apiBaseFromRequest(req)
+    res.json({ projects: withProxiedMediaList(projects, apiBase) })
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Failed to load projects' })
   }
 })
 
-projectsRouter.get('/admin/all', requireAuth, async (_req, res) => {
+projectsRouter.get('/admin/all', requireAuth, async (req, res) => {
   try {
     const supabase = getSupabase()
     const { data, error } = await supabase
@@ -55,7 +57,8 @@ projectsRouter.get('/admin/all', requireAuth, async (_req, res) => {
       .order('created_at', { ascending: false })
 
     if (error) throw error
-    res.json({ projects: data ?? [] })
+    const apiBase = apiBaseFromRequest(req)
+    res.json({ projects: withProxiedMediaList(data ?? [], apiBase) })
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Failed to load projects' })
@@ -77,7 +80,8 @@ projectsRouter.get('/:slug', async (req, res) => {
       res.status(404).json({ error: 'Project not found' })
       return
     }
-    res.json({ project: data })
+    const apiBase = apiBaseFromRequest(req)
+    res.json({ project: withProxiedMedia(data, apiBase) })
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Failed to load project' })
@@ -121,7 +125,7 @@ projectsRouter.post('/', requireAuth, async (req, res) => {
       res.status(400).json({ error: error.message })
       return
     }
-    res.status(201).json({ project: data })
+    res.status(201).json({ project: withProxiedMedia(data, apiBaseFromRequest(req)) })
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Failed to create project' })
@@ -168,7 +172,7 @@ projectsRouter.put('/:id', requireAuth, async (req, res) => {
       res.status(400).json({ error: error.message })
       return
     }
-    res.json({ project: data })
+    res.json({ project: withProxiedMedia(data, apiBaseFromRequest(req)) })
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Failed to update project' })

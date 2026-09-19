@@ -1,5 +1,6 @@
 import {
   DeleteObjectCommand,
+  GetObjectCommand,
   PutBucketCorsCommand,
   PutObjectCommand,
   type PutObjectCommandInput,
@@ -42,7 +43,6 @@ export async function createPresignedUploadUrl(key: string, contentType: string,
     ContentType: contentType,
   })
 
-  // Avoid flexible-checksum query params that break browser PUT uploads
   const uploadUrl = await getSignedUrl(client, command, {
     expiresIn,
     signableHeaders: new Set(['content-type']),
@@ -54,6 +54,31 @@ export async function createPresignedUploadUrl(key: string, contentType: string,
     publicUrl: publicUrlForKey(key),
     expiresIn,
   }
+}
+
+export async function createPresignedDownloadUrl(key: string, expiresIn = 3600) {
+  const client = getB2Client()
+  const bucket = getB2Bucket()
+
+  const command = new GetObjectCommand({
+    Bucket: bucket,
+    Key: key,
+  })
+
+  return getSignedUrl(client, command, { expiresIn })
+}
+
+export async function getObjectStream(key: string, range?: string) {
+  const client = getB2Client()
+  const bucket = getB2Bucket()
+
+  return client.send(
+    new GetObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Range: range,
+    }),
+  )
 }
 
 export async function deleteObject(key: string) {
@@ -68,7 +93,6 @@ export async function deleteObject(key: string) {
   )
 }
 
-/** Allow browser uploads from the portfolio frontend origins */
 export async function configureBucketCors(origins: string[]) {
   const client = getB2Client()
   const bucket = getB2Bucket()
@@ -82,7 +106,14 @@ export async function configureBucketCors(origins: string[]) {
             AllowedOrigins: origins,
             AllowedMethods: ['GET', 'PUT', 'POST', 'HEAD', 'DELETE'],
             AllowedHeaders: ['*'],
-            ExposeHeaders: ['ETag', 'x-amz-request-id', 'x-amz-version-id'],
+            ExposeHeaders: [
+              'ETag',
+              'x-amz-request-id',
+              'x-amz-version-id',
+              'Content-Range',
+              'Accept-Ranges',
+              'Content-Length',
+            ],
             MaxAgeSeconds: 3600,
           },
         ],
