@@ -20,6 +20,9 @@ export function getB2Client(): S3Client {
         secretAccessKey: env.b2.applicationKey,
       },
       forcePathStyle: true,
+      // Prevent AWS SDK v3 default CRC checksums from breaking browser presigned PUTs
+      requestChecksumCalculation: 'WHEN_REQUIRED',
+      responseChecksumValidation: 'WHEN_REQUIRED',
     })
   }
 

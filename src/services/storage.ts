@@ -1,5 +1,6 @@
 import {
   DeleteObjectCommand,
+  PutBucketCorsCommand,
   PutObjectCommand,
   type PutObjectCommandInput,
 } from '@aws-sdk/client-s3'
@@ -41,7 +42,11 @@ export async function createPresignedUploadUrl(key: string, contentType: string,
     ContentType: contentType,
   })
 
-  const uploadUrl = await getSignedUrl(client, command, { expiresIn })
+  // Avoid flexible-checksum query params that break browser PUT uploads
+  const uploadUrl = await getSignedUrl(client, command, {
+    expiresIn,
+    signableHeaders: new Set(['content-type']),
+  })
 
   return {
     key,
@@ -59,6 +64,29 @@ export async function deleteObject(key: string) {
     new DeleteObjectCommand({
       Bucket: bucket,
       Key: key,
+    }),
+  )
+}
+
+/** Allow browser uploads from the portfolio frontend origins */
+export async function configureBucketCors(origins: string[]) {
+  const client = getB2Client()
+  const bucket = getB2Bucket()
+
+  await client.send(
+    new PutBucketCorsCommand({
+      Bucket: bucket,
+      CORSConfiguration: {
+        CORSRules: [
+          {
+            AllowedOrigins: origins,
+            AllowedMethods: ['GET', 'PUT', 'POST', 'HEAD', 'DELETE'],
+            AllowedHeaders: ['*'],
+            ExposeHeaders: ['ETag', 'x-amz-request-id', 'x-amz-version-id'],
+            MaxAgeSeconds: 3600,
+          },
+        ],
+      },
     }),
   )
 }
