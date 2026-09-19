@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { getSupabase } from '../config/supabase.js'
 import { requireAuth } from '../services/auth.js'
 import { apiBaseFromRequest, mediaProxyUrl } from '../utils/mediaUrl.js'
+import { isDirectPublicMediaUrl } from '../services/supabaseStorage.js'
 
 export const heroRouter = Router()
 
@@ -37,10 +38,14 @@ async function ensureHeroRow() {
 }
 
 function presentHero(row: HeroRow, apiBase: string) {
+  const videoUrl = isDirectPublicMediaUrl(row.video_url)
+    ? row.video_url
+    : mediaProxyUrl(apiBase, row.video_key) ?? row.video_url ?? null
+
   return {
     boxText: row.box_text || DEFAULT_BOX,
     videoKey: row.video_key,
-    videoUrl: mediaProxyUrl(apiBase, row.video_key) ?? row.video_url ?? null,
+    videoUrl,
   }
 }
 

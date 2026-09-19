@@ -3,6 +3,7 @@ import { getSupabase } from '../config/supabase.js'
 import { requireAuth } from '../services/auth.js'
 import { deleteObject } from '../services/storage.js'
 import { apiBaseFromRequest, mediaProxyUrl } from '../utils/mediaUrl.js'
+import { isDirectPublicMediaUrl } from '../services/supabaseStorage.js'
 
 export const servicesRouter = Router()
 
@@ -20,15 +21,22 @@ type ServiceRow = {
 }
 
 function presentService(row: ServiceRow, apiBase: string) {
+  const imageUrl = isDirectPublicMediaUrl(row.image_url)
+    ? row.image_url
+    : mediaProxyUrl(apiBase, row.image_key) ?? row.image_url ?? null
+  const videoUrl = isDirectPublicMediaUrl(row.video_url)
+    ? row.video_url
+    : mediaProxyUrl(apiBase, row.video_key) ?? row.video_url ?? null
+
   return {
     id: row.id,
     title: row.title,
     description: row.description,
     mediaType: row.media_type,
     imageKey: row.image_key,
-    imageUrl: mediaProxyUrl(apiBase, row.image_key) ?? row.image_url ?? null,
+    imageUrl,
     videoKey: row.video_key,
-    videoUrl: mediaProxyUrl(apiBase, row.video_key) ?? row.video_url ?? null,
+    videoUrl,
     sortOrder: row.sort_order,
     isPublished: row.is_published,
   }

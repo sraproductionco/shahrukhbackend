@@ -66,7 +66,15 @@ mediaRouter.get('/', async (req, res) => {
     res.end(Buffer.from(bytes))
   } catch (err) {
     console.error('Media proxy error:', err)
+    const message = err instanceof Error ? err.message : ''
     if (!res.headersSent) {
+      if (/cap exceeded|AccessDenied/i.test(message)) {
+        res.status(503).json({
+          error:
+            'Media storage download cap exceeded. Raise Backblaze Class B caps, or re-upload files (new uploads use Supabase Storage).',
+        })
+        return
+      }
       res.status(404).json({ error: 'Media not found' })
     }
   }

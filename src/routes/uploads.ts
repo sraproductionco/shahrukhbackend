@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { requireAuth } from '../services/auth.js'
-import { createPresignedUploadUrl } from '../services/storage.js'
+import { createSupabaseUploadUrl, ensureMediaBucket } from '../services/supabaseStorage.js'
 import { slugify } from '../utils/slugify.js'
 
 export const uploadsRouter = Router()
@@ -16,12 +16,15 @@ uploadsRouter.post('/presign', requireAuth, async (req, res) => {
       return
     }
 
+    await ensureMediaBucket()
+
     const safeName = slugify(filename.replace(/\.[^.]+$/, '')) || 'file'
     const ext = filename.includes('.') ? filename.split('.').pop() : 'bin'
     const folder = kind === 'thumbnail' || kind === 'image' ? 'thumbnails' : 'videos'
     const key = `${folder}/${Date.now()}-${safeName}.${ext}`
 
-    const result = await createPresignedUploadUrl(key, contentType, 3600)
+    // Prefer Supabase Storage — Backblaze free tier Class B caps block downloads.
+    const result = await createSupabaseUploadUrl(key, contentType)
     res.json(result)
   } catch (err) {
     console.error(err)
