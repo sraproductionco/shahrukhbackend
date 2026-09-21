@@ -16,11 +16,15 @@ export async function ensureMediaBucket(): Promise<void> {
       if (!exists) {
         const { error } = await supabase.storage.createBucket(MEDIA_BUCKET, {
           public: true,
+          fileSizeLimit: 52428800, // 50MB — Supabase free-plan max
         })
         if (error && !/already exists/i.test(error.message)) throw error
       } else {
-        const { error } = await supabase.storage.updateBucket(MEDIA_BUCKET, { public: true })
-        if (error && !/not authorized|already/i.test(error.message)) {
+        const { error } = await supabase.storage.updateBucket(MEDIA_BUCKET, {
+          public: true,
+          fileSizeLimit: 52428800,
+        })
+        if (error && !/not authorized|already|exceeded/i.test(error.message)) {
           console.warn('updateBucket:', error.message)
         }
       }
