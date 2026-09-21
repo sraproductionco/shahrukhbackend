@@ -71,7 +71,7 @@ mediaRouter.get('/', async (req, res) => {
       if (/cap exceeded|AccessDenied/i.test(message)) {
         res.status(503).json({
           error:
-            'Media storage download cap exceeded. Raise Backblaze Class B caps, or re-upload files (new uploads use Supabase Storage).',
+            'Backblaze B2 download cap exceeded (Class B). Open B2 → Caps & Alerts, raise or disable the Download / Class B cap, then retry.',
         })
         return
       }

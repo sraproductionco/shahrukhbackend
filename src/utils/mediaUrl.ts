@@ -1,5 +1,4 @@
 import type { Request } from 'express'
-import { isDirectPublicMediaUrl } from '../services/supabaseStorage.js'
 
 type MediaFields = {
   thumbnail_key?: string | null
@@ -19,30 +18,34 @@ export function apiBaseFromRequest(req: Request): string {
   return `${proto}://${host}`
 }
 
-export function mediaProxyUrl(apiBase: string, key: string | null | undefined): string | null {
+/** B2 private objects are served via backend media proxy (signed redirect). */
+export function mediaProxyUrl(
+  apiBase: string,
+  key: string | null | undefined,
+  opts?: { stream?: boolean },
+): string | null {
   if (!key) return null
-  return `${apiBase}/api/media?key=${encodeURIComponent(key)}&stream=1`
+  const params = new URLSearchParams({ key })
+  // Stream mode for images; videos use redirect (better seeking / Vercel-friendly)
+  if (opts?.stream) params.set('stream', '1')
+  return `${apiBase}/api/media?${params.toString()}`
 }
 
 function resolveUrl(
   apiBase: string,
   key: string | null | undefined,
   url: string | null | undefined,
+  stream = false,
 ): string | null {
-  if (isDirectPublicMediaUrl(url)) return url ?? null
-  if (key && isDirectPublicMediaUrl(`https://placeholder/${key}`)) {
-    /* no-op — keys alone are not public URLs */
-  }
-  // Prefer proxy for private B2 keys; keep explicit public URLs as fallback
-  return mediaProxyUrl(apiBase, key) ?? url ?? null
+  return mediaProxyUrl(apiBase, key, { stream }) ?? url ?? null
 }
 
-/** Rewrite private B2 URLs to backend proxy; keep Supabase public URLs as-is */
+/** Always prefer proxied B2 keys for portfolio media. */
 export function withProxiedMedia<T extends MediaFields>(project: T, apiBase: string): T {
   return {
     ...project,
-    thumbnail_url: resolveUrl(apiBase, project.thumbnail_key, project.thumbnail_url),
-    video_url: resolveUrl(apiBase, project.video_key, project.video_url) ?? '',
+    thumbnail_url: resolveUrl(apiBase, project.thumbnail_key, project.thumbnail_url, true),
+    video_url: resolveUrl(apiBase, project.video_key, project.video_url, false) ?? '',
   }
 }
 
