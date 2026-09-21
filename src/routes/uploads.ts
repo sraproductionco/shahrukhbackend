@@ -1,11 +1,17 @@
 import { Router } from 'express'
 import { requireAuth } from '../services/auth.js'
+import { createSupabaseUploadUrl } from '../services/supabaseStorage.js'
+import { mediaProvider } from '../utils/mediaUrl.js'
 import { createPresignedUploadUrl } from '../services/storage.js'
 import { slugify } from '../utils/slugify.js'
 
 export const uploadsRouter = Router()
 
-/** All media (images + videos) uses Backblaze B2 only. */
+/**
+ * Presign upload.
+ * Default: Supabase public bucket (no B2 download caps / no credit card).
+ * Set MEDIA_PROVIDER=b2 to use Backblaze instead.
+ */
 uploadsRouter.post('/presign', requireAuth, async (req, res) => {
   try {
     const filename = String(req.body?.filename ?? '').trim()
@@ -22,8 +28,14 @@ uploadsRouter.post('/presign', requireAuth, async (req, res) => {
     const folder = kind === 'thumbnail' || kind === 'image' ? 'thumbnails' : 'videos'
     const key = `${folder}/${Date.now()}-${safeName}.${ext}`
 
-    const result = await createPresignedUploadUrl(key, contentType, 3600)
-    res.json({ ...result, provider: 'b2' })
+    if (mediaProvider() === 'b2') {
+      const result = await createPresignedUploadUrl(key, contentType, 3600)
+      res.json({ ...result, provider: 'b2' })
+      return
+    }
+
+    const result = await createSupabaseUploadUrl(key, contentType)
+    res.json(result)
   } catch (err) {
     console.error(err)
     res.status(500).json({

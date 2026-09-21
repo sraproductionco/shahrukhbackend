@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { getSupabase } from '../config/supabase.js'
 import { requireAuth } from '../services/auth.js'
-import { apiBaseFromRequest, mediaProxyUrl } from '../utils/mediaUrl.js'
+import { apiBaseFromRequest, resolveMediaUrl } from '../utils/mediaUrl.js'
 
 export const heroRouter = Router()
 
@@ -40,7 +40,7 @@ function presentHero(row: HeroRow, apiBase: string) {
   return {
     boxText: row.box_text || DEFAULT_BOX,
     videoKey: row.video_key,
-    videoUrl: mediaProxyUrl(apiBase, row.video_key) ?? row.video_url ?? null,
+    videoUrl: resolveMediaUrl(apiBase, row.video_key, row.video_url),
   }
 }
 

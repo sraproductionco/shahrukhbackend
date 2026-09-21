@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { getSupabase } from '../config/supabase.js'
 import { requireAuth } from '../services/auth.js'
 import { deleteObject } from '../services/storage.js'
-import { apiBaseFromRequest, mediaProxyUrl } from '../utils/mediaUrl.js'
+import { apiBaseFromRequest, resolveMediaUrl } from '../utils/mediaUrl.js'
 
 export const servicesRouter = Router()
 
@@ -26,9 +26,9 @@ function presentService(row: ServiceRow, apiBase: string) {
     description: row.description,
     mediaType: row.media_type,
     imageKey: row.image_key,
-    imageUrl: mediaProxyUrl(apiBase, row.image_key, { stream: true }) ?? row.image_url ?? null,
+    imageUrl: resolveMediaUrl(apiBase, row.image_key, row.image_url, { stream: true }),
     videoKey: row.video_key,
-    videoUrl: mediaProxyUrl(apiBase, row.video_key) ?? row.video_url ?? null,
+    videoUrl: resolveMediaUrl(apiBase, row.video_key, row.video_url),
     sortOrder: row.sort_order,
     isPublished: row.is_published,
   }
