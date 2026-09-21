@@ -68,10 +68,10 @@ mediaRouter.get('/', async (req, res) => {
     console.error('Media proxy error:', err)
     const message = err instanceof Error ? err.message : ''
     if (!res.headersSent) {
-      if (/cap exceeded|AccessDenied/i.test(message)) {
+      if (/cap exceeded|AccessDenied|bandwidth/i.test(message)) {
         res.status(503).json({
           error:
-            'Backblaze B2 download cap exceeded (Class B). Open B2 → Caps & Alerts, raise or disable the Download / Class B cap, then retry.',
+            'Backblaze daily download bandwidth cap exceeded. Open B2 → Caps & Alerts → raise Daily Download Bandwidth Cap from 1 GB to 100 GB (keep dollar limit at $0 — no credit card needed), then retry. Or wait for the daily reset.',
         })
         return
       }
