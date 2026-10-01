@@ -66,20 +66,24 @@ type ReelRow = {
 async function ensureHeroRow(): Promise<HeroRow> {
   const supabase = getSupabase()
   const { data, error } = await supabase.from('hero_settings').select('*').eq('id', 1).maybeSingle()
-  if (error) throw error
+  if (error) {
+    throw new Error(typeof error === 'object' ? JSON.stringify(error) : String(error))
+  }
   if (data) return data as HeroRow
 
   const { data: created, error: insertError } = await supabase
     .from('hero_settings')
     .insert({
       id: 1,
-      ...DEFAULTS,
+      box_text: DEFAULTS.box_text,
       video_key: null,
       video_url: null,
     })
     .select('*')
     .single()
-  if (insertError) throw insertError
+  if (insertError) {
+    throw new Error(typeof insertError === 'object' ? JSON.stringify(insertError) : String(insertError))
+  }
   return created as HeroRow
 }
 
@@ -136,7 +140,9 @@ heroRouter.get('/', async (req, res) => {
         .order('sort_order', { ascending: true })
       if (!all) reelsQuery = reelsQuery.eq('is_published', true)
       const { data, error } = await reelsQuery
-      if (error) throw error
+      if (error) {
+        throw new Error(typeof error === 'object' ? JSON.stringify(error) : String(error))
+      }
       reels = (data as ReelRow[] | null) ?? []
     } catch (err) {
       console.warn('hero_reels unavailable yet', err)
@@ -149,9 +155,15 @@ heroRouter.get('/', async (req, res) => {
     })
   } catch (err) {
     console.error(err)
+    const detail =
+      err instanceof Error
+        ? err.message
+        : typeof err === 'object'
+          ? JSON.stringify(err)
+          : String(err)
     res.status(500).json({
       error: 'Failed to load hero settings',
-      detail: err instanceof Error ? err.message : String(err),
+      detail,
     })
   }
 })
