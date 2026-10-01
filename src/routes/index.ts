@@ -1,13 +1,14 @@
-import { Router } from 'express'
 import { aboutRouter } from './about.js'
 import { authRouter } from './auth.js'
 import { categoriesRouter } from './categories.js'
 import { healthRouter } from './health.js'
 import { heroRouter } from './hero.js'
 import { mediaRouter } from './media.js'
+import { migrateRouter } from './migrate.js'
 import { projectsRouter } from './projects.js'
 import { servicesRouter } from './services.js'
 import { uploadsRouter } from './uploads.js'
+import { Router } from 'express'
 
 export const apiRouter = Router()
 
@@ -20,6 +21,7 @@ apiRouter.use('/media', mediaRouter)
 apiRouter.use('/hero', heroRouter)
 apiRouter.use('/services', servicesRouter)
 apiRouter.use('/about', aboutRouter)
+apiRouter.use('/migrate', migrateRouter)
 
 apiRouter.get('/', (_req, res) => {
   res.json({
