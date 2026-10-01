@@ -128,18 +128,24 @@ heroRouter.get('/', async (req, res) => {
     const all = String(req.query.all ?? '') === '1'
     const hero = await ensureHeroRow()
 
-    let reelsQuery = getSupabase()
-      .from('hero_reels')
-      .select('*')
-      .order('sort_order', { ascending: true })
-    if (!all) reelsQuery = reelsQuery.eq('is_published', true)
-
-    const { data: reels, error } = await reelsQuery
-    if (error) throw error
+    let reels: ReelRow[] = []
+    try {
+      let reelsQuery = getSupabase()
+        .from('hero_reels')
+        .select('*')
+        .order('sort_order', { ascending: true })
+      if (!all) reelsQuery = reelsQuery.eq('is_published', true)
+      const { data, error } = await reelsQuery
+      if (error) throw error
+      reels = (data as ReelRow[] | null) ?? []
+    } catch (err) {
+      console.warn('hero_reels unavailable yet', err)
+      reels = []
+    }
 
     res.json({
       hero: presentHero(hero, apiBase),
-      reels: (reels as ReelRow[] | null)?.map((r) => presentReel(r, apiBase)) ?? [],
+      reels: reels.map((r) => presentReel(r, apiBase)),
     })
   } catch (err) {
     console.error(err)

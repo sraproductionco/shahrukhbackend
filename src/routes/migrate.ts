@@ -1,6 +1,5 @@
 import { Router } from 'express'
 import pg from 'pg'
-import { requireAuth } from '../services/auth.js'
 
 export const migrateRouter = Router()
 
@@ -85,8 +84,15 @@ SELECT * FROM (VALUES
 WHERE NOT EXISTS (SELECT 1 FROM hero_reels LIMIT 1);
 `
 
-migrateRouter.post('/hero-v2', requireAuth, async (_req, res) => {
+migrateRouter.post('/hero-v2', async (req, res) => {
   try {
+    const secret = String(req.headers['x-migrate-secret'] ?? req.query.secret ?? '')
+    const expected = process.env.ADMIN_JWT_SECRET || ''
+    if (!expected || secret !== expected) {
+      res.status(401).json({ error: 'Unauthorized' })
+      return
+    }
+
     const client = new pg.Client({
       host: process.env.DB_HOST,
       port: Number(process.env.DB_PORT || 5432),
