@@ -149,7 +149,10 @@ heroRouter.get('/', async (req, res) => {
     })
   } catch (err) {
     console.error(err)
-    res.status(500).json({ error: 'Failed to load hero settings' })
+    res.status(500).json({
+      error: 'Failed to load hero settings',
+      detail: err instanceof Error ? err.message : String(err),
+    })
   }
 })
 
